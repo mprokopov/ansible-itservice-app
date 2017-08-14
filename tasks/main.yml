@@ -1,0 +1,61 @@
+- name: copy docker-compose.yml
+  tags: docker
+  template: src=./files/docker-compose.yml dest="{{path}}/docker-compose.yml"
+
+- name: copy docker-override
+  tags: docker
+  template: src=./files/docker-compose.override.yml.j2 dest="{{path}}/docker-compose.override.yml"
+
+- name: copy .env
+  tags: docker
+  template: src=./files/.env.j2 dest="{{path}}/.env"
+
+- name: copy it-service template
+  copy: src=./files/it-service.service dest=/etc/systemd/system/it-service.service
+  become: true
+  become_user: root
+
+- name: create networks
+  docker_network:
+    name: "{{item}}"
+    state: present
+  with_items: ["itservice_front-tier", "itservice_back-tier"]
+
+
+- name: pull and up docker service
+  tags: docker
+  command: /opt/bin/docker-compose create
+  args:
+    chdir: "{{path}}"
+# - name: pull and up docker service
+#   tags: docker
+#   docker_service:
+#     project_src: "{{path}}"
+#     project_name: "itservice"
+#     pull: yes
+#     #files: ["docker-compose.yml","docker-compose.override.yml"]
+#     # build: no
+#     state: present
+#     recreate: smart
+#   register: output
+
+# - debug:
+#       var: output
+
+- name: add connect to nginx-proxy
+  tags:
+    - network
+    - docker
+  docker_network:
+    name: "itservice_front-tier"
+    connected:
+      - "nginx-proxy"
+    appends: yes
+
+- name: start it-service
+  systemd: 
+    name: it-service
+    state: started
+    daemon_reload: yes
+  become: true
+  become_user: root

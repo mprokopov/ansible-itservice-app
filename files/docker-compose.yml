@@ -1,0 +1,137 @@
+version: "2"
+
+services:
+  memcached:
+    image: memcached
+    networks:
+      - back-tier
+  redis:
+    image: redis
+    ports: ["6379"]
+    networks:
+      - back-tier
+  db:
+    image: mysql:5
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
+    environment:
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d
+      - mysql:/var/lib/mysql
+    networks:
+      - back-tier
+
+  sse:
+    image: registry.it-expert.com.ua/nexus/itservice-sse
+    environment:
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+      - MYSQL_HOST
+      - REDIS_HOST
+      - RACK_ENV
+    links:
+      - redis
+      - db
+    depends_on:
+      - db
+      - redis
+    networks:
+      - back-tier
+      - front-tier
+
+  worker:
+    image: registry.it-expert.com.ua/nexus/it-service
+    command: "dockerize -stdout /app/log/production.log -wait tcp://db:3306 -wait tcp://redis:6379 bundle exec rake environment resque:work"
+    environment:
+      - QUEUE=*
+      - DATABASE_URL
+      - REDIS_URL
+      - RAILS_ENV
+      #- LETTER_OPENER=letter_opener_web
+    links:
+      - db
+      - redis
+    depends_on:
+      - db
+      - redis
+    networks:
+      - back-tier
+
+  worker-schedule:
+    image: registry.it-expert.com.ua/nexus/it-service
+    # command: "bundle exec rake environment resque:scheduler"
+    command: "dockerize -stdout /app/log/production.log -wait tcp://db:3306 -wait tcp://redis:6379 bundle exec rake environment resque:scheduler"
+    environment:
+      - RAILS_ENV
+      - REDIS_URL
+      - DATABASE_URL
+    links:
+      - db
+      - redis
+      #- search
+    depends_on:
+      - redis
+    networks:
+      - back-tier
+
+  search:
+    image: registry.it-expert.com.ua/nexus/itservice-search
+    build: ./search
+    ## command: 'indexer -c /itservice/config/development.sphinx.conf --all && searchd -c /itservice/config/development.sphinx.conf --nodetach'
+    volumes:
+      - search-data:/search
+    environment:
+      - SPHINX_ENV
+      - DATABASE_URL
+    depends_on:
+      - db
+    links:
+      - db
+    networks:
+      - back-tier
+    expose:
+      - "9306"
+  web:
+    image: registry.it-expert.com.ua/nexus/it-service
+    environment:
+      - RAILS_ENV
+      - DATABASE_URL
+      - REDIS_URL
+      - RAILS_SERVE_STATIC_FILES
+      - SLACK_NOTIFICATION
+      - EMAIL_NOTIFICATION
+      - SLACK_WEBHOOK_URL
+      - SLACK_WEBHOOK_CHANNEL
+      - STREAM_API
+      - MANDRILL_USERNAME
+      - MANDRILL_PASSWORD
+      - SENDGRID_USERNAME
+      - SENDGRID_PASSWORD
+      - SECRET_KEY_BASE
+      - MAILCHIMP_API_KEY
+    depends_on:
+      - db
+      - redis
+    links:
+      - db
+      - redis
+      - search
+    networks:
+      - back-tier
+      - front-tier
+    volumes:
+      - search-data:/search
+
+
+volumes:
+  search-data:
+  mysql:
+    #external:
+      #name: itservice-bundle
+
+networks:
+  back-tier:
+  front-tier:

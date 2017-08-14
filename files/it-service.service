@@ -1,0 +1,17 @@
+[Unit]
+Description=itservice
+After=nginx-proxy.service
+Requires=nginx-proxy.service
+
+[Service]
+TimeoutStartSec=0
+Type=simple
+WorkingDirectory=/home/core/itservice
+#ExecStartPre=-/bin/docker stop nginx-proxy
+ExecStart=/opt/bin/docker-compose -f /home/core/itservice/docker-compose.yml -f /home/core/itservice/docker-compose.override.yml up
+ExecStartPost=-/bin/docker network connect itservice_front-tier nginx-proxy
+ExecStartPost=-/bin/docker restart nginx-proxy
+ExecStop=/opt/bin/docker-compose -f /home/core/itservice/docker-compose.yml -f /home/core/itservice/docker-compose.override.yml stop
+
+[Install]
+WantedBy=multi-user.target

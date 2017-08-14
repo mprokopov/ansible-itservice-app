@@ -1,0 +1,13 @@
+path: "/home/core/itservice"
+stream_virtual_host: "stream.it-premium.local"
+stream_api: "http://stream.it-premium.local"
+web_virtual_host: "beta.it-premium.local"
+mysql_root_password: "wowow1!"
+sphinx_env: "production"
+build_env: stage
+build_path:
+  - sse
+  - search
+assets:
+  - sql
+  - uploads

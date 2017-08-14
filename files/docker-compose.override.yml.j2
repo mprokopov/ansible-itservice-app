@@ -1,0 +1,30 @@
+version: "2"
+
+services:
+  db:
+    environment:
+      - MYSQL_ROOT_PASSWORD={{mysql_root_password}}
+
+  sse:
+    environment:
+      - VIRTUAL_HOST={{stream_virtual_host}}
+
+  worker:
+    image: registry.it-expert.com.ua/nexus/it-service:{{build_env}}
+  worker-schedule:
+    image: registry.it-expert.com.ua/nexus/it-service:{{build_env}}
+
+  search:
+    environment:
+      - SPHINX_ENV={{sphinx_env}}
+
+  web:
+    image: registry.it-expert.com.ua/nexus/it-service:{{build_env}}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./uploads:/app/public/uploads
+    environment:
+      - VIRTUAL_HOST={{web_virtual_host}}
+      - HTTPS_METHOD=noredirect
+      - STREAM_API={{stream_api}}
