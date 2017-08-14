@@ -8,7 +8,7 @@
 
 - name: copy .env
   tags: docker
-  template: src=./files/.env.j2 dest="{{path}}/.env"
+  template: src=./files/dotenv.j2 dest="{{path}}/.env"
 
 - name: copy it-service template
   copy: src=./files/it-service.service dest=/etc/systemd/system/it-service.service
