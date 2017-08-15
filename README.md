@@ -17,9 +17,33 @@ path: "/home/core/itservice"
 stream_virtual_host: "stream.it-premium.local"
 stream_api: "http://stream.it-premium.local"
 web_virtual_host: "beta.it-premium.com.ua"
-mysql_root_password: "wowowo2!"
+mysql_root_password: 
 sphinx_env: "production"
 build_env: stage
+
+sendgrid_username: 
+sendgrid_password: 
+
+secret_key_base: 
+
+redis_url: redis://redis:6379
+redis_host: redis
+
+database_url: 
+mysql_database: 
+mysql_user: 
+mysql_password: 
+mysql_host: db
+
+rails_env: production
+rack_env: production
+rails_serve_static_files: true
+
+slack_notification: false
+email_notification: false
+
+slack_webhook_url: 
+slack_webhook_channel: 
 
 Dependencies
 ------------

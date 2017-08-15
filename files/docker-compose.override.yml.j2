@@ -8,6 +8,8 @@ services:
   sse:
     environment:
       - VIRTUAL_HOST={{stream_virtual_host}}
+      - LETSENCRYPT_HOST={{stream_virtual_host}}
+      - LETSENCRYPT_EMAIL={{letsencrylt_email}}
 
   worker:
     image: registry.it-expert.com.ua/nexus/it-service:{{build_env}}
@@ -27,4 +29,6 @@ services:
     environment:
       - VIRTUAL_HOST={{web_virtual_host}}
       - HTTPS_METHOD=noredirect
+      - LETSENCRYPT_HOST={{web_virtual_host}}
+      - LETSENCRYPT_EMAIL={{letsencrylt_email}}
       - STREAM_API={{stream_api}}
